@@ -62,7 +62,7 @@ h2 {
 header{
     background-image:
     linear-gradient(rgba(70, 69, 69, 0.55), rgba(63, 62, 62, 0.55)),
-     url('images/arch\ 1.jpg');
+     url('../images/arch\ 1.jpg');
     background-size: cover;
     padding: 40px 0 150px;
 }

@@ -60,7 +60,7 @@ h2 {
 header{
     background-image:
     linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)),
-    url('images/team\ luxe.jpg');
+    url('../images/team\ luxe.jpg');
     background-size: cover;
     padding: 40px 0px 180px;       
 }
