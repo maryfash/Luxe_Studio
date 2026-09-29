@@ -392,7 +392,7 @@ header {
 }
 
 #Portfolio .interiorimages {
-    display: flex;
+    /* display: flex; */
     justify-content: center;
     align-items: stretch;
     gap: 20px;
@@ -748,6 +748,9 @@ iframe {
     width: 100%;
     max-width: 1200px;
     height: 350px;
+iframe{
+    width: 100%;
+    height:150px;
     margin: 50px 0 20px;
     border-radius: 10px;
 }
