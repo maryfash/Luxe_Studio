@@ -1,30 +1,105 @@
+/* =====================================================================
+   LUXE STUDIO — luxe.css (corrected & fully responsive)
+
+   HOW TO READ THIS FILE
+   Every place I changed something is marked  "FIX #n"  with WHAT I
+   changed and WHY. Ctrl+F "FIX" to review them all.
+
+   FIX 1  Resolved the leftover Git merge-conflict markers
+   FIX 2  Fluid .container (padding shrinks with the screen)
+   FIX 3  Global img rule so images never overflow
+   FIX 4  Section IDs in animations now match the HTML (case-sensitive)
+   FIX 5  Nav breakpoint moved to 1024px (9 links overflow before 900px)
+   FIX 6  Mobile menu: dvh, scrolling, hidden-when-closed, link colour bug
+   FIX 7  Fluid type + spacing with clamp()
+   FIX 8  px line-heights -> unitless
+   FIX 9  Portfolio: responsive auto-fit grid (was fixed 3 columns)
+   FIX 10 Process: explicit 4 -> 2 -> 1 columns (no orphan card)
+   FIX 11 Contact: removed fixed heights, fluid map iframe
+   FIX 12 Footer: clean 4-col -> 2-col -> 1-col
+   FIX 13 Touch devices can't hover, so show portfolio captions
+   FIX 14 Image path matches CSS/luxe.css location
+   FIX 15 scroll-margin-top so the fixed navbar doesn't cover headings
+   FIX 16 Focus outline + reduced-motion support
+   ===================================================================== */
+
+
+/* ---------------------------------------------------------------------
+   0. RESET & GLOBAL
+   --------------------------------------------------------------------- */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+html {
+    scroll-behavior: smooth;
+    /* FIX 7: stops iOS Safari from inflating text sizes in landscape. */
+    -webkit-text-size-adjust: 100%;
+}
+
 body {
     font-family: 'Poppins', sans-serif;
     font-style: normal;
+    /* NOTE: this hides sideways scroll, but it only MASKS overflow bugs.
+       The real fixes are below (fluid widths, wrapping, min()). */
     overflow-x: hidden;
 }
 
-header { animation: sectionReveal 0.8s ease-out; }
-#About { animation: sectionReveal 0.8s ease-out 0.2s both; }
-#Services { animation: sectionReveal 0.8s ease-out 0.4s both; }
-#Portfolio { animation: sectionReveal 0.8s ease-out 0.6s both; }
-#Process { animation: sectionReveal 0.8s ease-out 0.6s both; }
-#Testimonials { animation: sectionReveal 0.8s ease-out 0.6s both; }
-#blog { animation: sectionReveal 0.8s ease-out 0.6s both; }
-#Contact { animation: sectionReveal 0.8s ease-out 0.6s both; }
+/* FIX 3: Without this, any image wider than its parent spills out of the
+   layout on small screens. max-width:100% lets it shrink with its box,
+   height:auto keeps the aspect ratio, display:block removes the tiny gap
+   browsers leave under inline images. Class rules further down (e.g.
+   .trend-card img { height:250px }) are more specific, so they still win. */
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
 
+/* FIX 7: long words/URLs wrap instead of pushing the page wider. */
+h1, h2, h3, h4, h5, p, a, span {
+    overflow-wrap: break-word;
+}
+
+/* FIX 15: the navbar is position:fixed, so when a nav link jumps to a
+   section, the heading would hide underneath it. This adds breathing room. */
+section[id] {
+    scroll-margin-top: 80px;
+}
+
+
+/* ---------------------------------------------------------------------
+   1. SECTION-REVEAL ANIMATIONS
+   --------------------------------------------------------------------- */
+/* FIX 4: HTML IDs are CASE-SENSITIVE. Your HTML uses:
+   about-us, Service, Portfolio, process, TESTIMONIALS, Blog, Contact.
+   The old CSS had #About, #Services, #Process, #Testimonials, #blog, so
+   five of these animations never matched anything. Now they match. */
+header        { animation: sectionReveal 0.8s ease-out; }
+#about-us     { animation: sectionReveal 0.8s ease-out 0.2s both; }
+#Service      { animation: sectionReveal 0.8s ease-out 0.4s both; }
+#Portfolio    { animation: sectionReveal 0.8s ease-out 0.6s both; }
+#process      { animation: sectionReveal 0.8s ease-out 0.6s both; }
+#TESTIMONIALS { animation: sectionReveal 0.8s ease-out 0.6s both; }
+#Blog         { animation: sectionReveal 0.8s ease-out 0.6s both; }
+#Contact      { animation: sectionReveal 0.8s ease-out 0.6s both; }
+
+
+/* ---------------------------------------------------------------------
+   2. PRELOADER
+   --------------------------------------------------------------------- */
 .preloader {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100vh;
+    /* FIX 6: on phones 100vh is taller than the visible area (the browser
+       address bar). 100dvh = the *dynamic* visible height. Browsers that
+       don't know dvh just use the 100vh line above. */
+    height: 100dvh;
     background: #202020;
     display: flex;
     align-items: center;
@@ -36,9 +111,11 @@ header { animation: sectionReveal 0.8s ease-out; }
 
 .preloader h2 {
     color: #c9a24b;
-    font-size: 35px;
+    /* FIX 7: was fixed 35px. clamp(min, preferred, max) scales smoothly. */
+    font-size: clamp(22px, 6vw, 35px);
     letter-spacing: 4px;
     font-weight: 500;
+    text-align: center;
 }
 
 .preloader.hide {
@@ -47,40 +124,61 @@ header { animation: sectionReveal 0.8s ease-out; }
     transition: opacity 0.6s ease, visibility 0.6s ease;
 }
 
-html {
-    scroll-behavior: smooth;
-}
 
-/* FLUID BASE CONTAINER */
+/* ---------------------------------------------------------------------
+   3. LAYOUT BASICS
+   --------------------------------------------------------------------- */
+/* FIX 1 + FIX 2: The file had TWO conflicting versions of .container.
+   I kept the good ideas from both:
+   - width:100% + max-width:1200px  -> never wider than the screen
+   - padding as a clamp()           -> 16px on phones, 40px on desktops
+   That replaces the old 20px / 12px padding overrides in media queries:
+   one fluid rule instead of three fixed ones. */
 .container {
-    width: 90%;
+    width: 100%;
     max-width: 1200px;
     margin: 0 auto;
+    padding: 0 clamp(16px, 4vw, 40px);
 }
 
 h3 {
-    color: #cea812; 
-    margin-bottom: 30px; 
-    font-weight: 500; 
+    color: #cea812;
+    margin-bottom: 30px;
+    font-weight: 500;
 }
 
 h2 {
     font-family: 'Poppins', sans-serif;
     font-style: normal;
-    font-size: 35px;
+    /* FIX 7: was 35px everywhere. */
+    font-size: clamp(26px, 4vw, 35px);
+    line-height: 1.25;
 }
 
-.flex-container h2, .flex-container h4 {
+.flex-container h2,
+.flex-container h4 {
     color: #c9a24b;
 }
 
+
+/* ---------------------------------------------------------------------
+   4. HEADER / HERO
+   --------------------------------------------------------------------- */
 header {
-    background-image: linear-gradient(rgba(70, 69, 69, 0.55), rgba(63, 62, 62, 0.55)), url('images/architecture.jpg');
+    background-image:
+        linear-gradient(rgba(70, 69, 69, 0.55), rgba(63, 62, 62, 0.55)),
+        /* FIX 14: your HTML loads "CSS/luxe.css". URLs inside a CSS file are
+           relative to THE CSS FILE, so from the CSS/ folder we go up one
+           level (../) to reach images/. The HEAD version used "images/..."
+           which only works if luxe.css sits next to index.html. */
+        url('../images/architecture.jpg');
     background-size: cover;
     background-position: center;
-    padding: 40px 0px 100px;       
+    /* FIX 7: top/bottom padding scales with screen size. */
+    padding: clamp(30px, 5vw, 40px) 0 clamp(60px, 9vw, 100px);
 }
 
+/* ----- Navbar ----- */
 .flex-container {
     display: flex;
     justify-content: space-between;
@@ -91,7 +189,7 @@ header {
     left: 0;
     padding: 15px 5%;
     width: 100%;
-    z-index: 1000; 
+    z-index: 1000;
 }
 
 .close-menu { display: none; }
@@ -100,6 +198,7 @@ header {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(15px);
 }
+
 .flex-container.scrolled nav ul li a {
     color: black;
 }
@@ -113,7 +212,9 @@ header {
 }
 
 .flex-container ul li {
-    margin-left: 30px;
+    /* FIX 5: the gap between links was a fixed 30px. With 9 links that is
+       ~270px of pure margin. Now it shrinks on smaller screens (14px min). */
+    margin-left: clamp(14px, 2vw, 30px);
     position: relative;
 }
 
@@ -121,6 +222,8 @@ header {
     color: white;
     text-decoration: none;
     font-weight: 500;
+    /* FIX 5: keeps "Testimonials" etc. on one line. */
+    white-space: nowrap;
     transition: 1s ease-in-out;
 }
 
@@ -149,29 +252,48 @@ header {
 .flex-container ul li a:hover::before {
     width: 130%;
     left: 0;
-} 
+}
 
+.hamburger {
+    display: none !important;
+    color: white;
+}
+
+.flex-container.scrolled .hamburger {
+    color: black;
+}
+
+/* FIX 6: base state for the overlay (only shown on small screens). */
+.menu-overlay { display: none; }
+
+/* ----- Hero text ----- */
 .header-text {
-    margin: 120px 0 30px;
+    /* FIX 7: 120px of top margin is huge on a phone. */
+    margin: clamp(80px, 12vw, 120px) 0 30px;
     color: white;
 }
 
 .header-text h1 {
-   font-size: clamp(35px, 5vw, 56px); 
-   letter-spacing: 2px;
+    /* FIX 7: this already used clamp(), but the old media queries then
+       overrode it with fixed 32px/28px. One clamp handles every size,
+       so those overrides are gone. */
+    font-size: clamp(28px, 5.5vw, 56px);
+    line-height: 1.15;
+    letter-spacing: 2px;
 }
 
 .header-text .gold {
     color: #cea812;
-    font-size: clamp(40px, 6vw, 60px);
+    font-size: clamp(36px, 7vw, 60px);
     margin-bottom: 5px;
 }
 
 .header-text p {
     width: 100%;
     max-width: 700px;
-    font-size: 20px;
-    margin: 20px 0px 50px;
+    font-size: clamp(16px, 2.2vw, 20px);
+    line-height: 1.7; /* FIX 8 */
+    margin: 20px 0 clamp(30px, 5vw, 50px);
 }
 
 .header-btn {
@@ -214,43 +336,45 @@ header {
     color: black;
 }
 
-.hamburger {
-    display: none !important;
-    color: white;
-}
 
-.flex-container.scrolled .hamburger {
-    color: black;
-}
-
-/* About section  */
+/* ---------------------------------------------------------------------
+   5. ABOUT
+   --------------------------------------------------------------------- */
 .about-us-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 40px;
-    margin: 100px 0px;
+    gap: clamp(24px, 4vw, 40px);
+    /* FIX 7: was a fixed 100px top & bottom. */
+    margin: clamp(60px, 8vw, 100px) 0;
     align-items: center;
 }
-.about-us-left, .about-us-Right {
-    flex: 1 1 400px;
+
+.about-us-left,
+.about-us-Right {
+    /* FIX 7: basis lowered 400 -> 350 so the two columns sit side by side
+       on tablets. min-width:0 lets flex children shrink below their content
+       size (a classic cause of sideways overflow). */
+    flex: 1 1 350px;
+    min-width: 0;
 }
 
 .about-us-left img {
     width: 100%;
     border-radius: 20px;
     transition: transform 0.3s ease;
-} 
+}
+
 .about-us-left img:hover { transform: scale(1.05); }
 
-.aboutusrightpara { 
+.aboutusrightpara {
     margin: 30px 0;
     letter-spacing: 2px;
-    line-height: 30px;
+    line-height: 1.9; /* FIX 8: was 30px */
     font-family: Georgia, 'Times New Roman', Times, serif;
 }
 
 .aboutusrightpara + p {
-    line-height: 25px;
+    line-height: 1.7; /* FIX 8: was 25px */
     margin-bottom: 50px;
 }
 
@@ -259,24 +383,29 @@ header {
     flex-wrap: wrap;
     gap: 20px;
     justify-content: space-between;
-    line-height: 25px;
+    line-height: 1.6; /* FIX 8 */
     text-align: center;
-} 
+}
 
 .gold {
     color: #c4b472;
     font-size: 30px;
     position: relative;
-} 
+}
+
 .gold span {
     position: absolute;
     top: -10px;
     font-weight: 0;
 }
 
+
+/* ---------------------------------------------------------------------
+   6. SERVICES
+   --------------------------------------------------------------------- */
 #Service {
     background-color: rgb(255, 253, 246);
-    padding: 80px 0;
+    padding: clamp(50px, 8vw, 80px) 0; /* FIX 7 */
     text-align: center;
 }
 
@@ -289,7 +418,7 @@ header {
     width: 100%;
     max-width: 550px;
     color: #646464;
-    line-height: 25px;
+    line-height: 1.7; /* FIX 8 */
     margin: 30px 0px;
 }
 
@@ -301,12 +430,14 @@ header {
     gap: 20px;
 }
 
+/* This card layout was already good: flex-wrap + a flex-basis means the
+   number of columns adapts by itself (3 -> 2 -> 1). Kept as is. */
 .design .sub-design {
     flex: 1 1 300px;
     max-width: 450px;
     background-color: #fff;
     border-radius: 10px;
-    padding: 30px;
+    padding: clamp(20px, 3vw, 30px); /* FIX 7 */
     transition: 0.4s ease-in-out;
 }
 
@@ -317,7 +448,7 @@ header {
     justify-content: center;
     margin: 10px 0px 20px;
 }
-  
+
 .sub-design .sub-design-img {
     width: 80px;
     height: 80px;
@@ -331,7 +462,8 @@ header {
 }
 
 .sub-design h4 { font-size: 22px; }
-.sub-design p { margin: 20px 0; line-height: 1.6; }
+.sub-design p  { margin: 20px 0; line-height: 1.6; }
+
 .sub-design a {
     text-decoration: none;
     color: #c9a24b;
@@ -339,13 +471,16 @@ header {
     border-bottom: 3px solid #c9a24b;
 }
 
-/* portfolio section */
+
+/* ---------------------------------------------------------------------
+   7. PORTFOLIO
+   --------------------------------------------------------------------- */
 #Portfolio {
-    padding: 100px 0;
+    padding: clamp(60px, 9vw, 100px) 0; /* FIX 7 */
     text-align: center;
 }
 
-#Portfolio h2 { font-size: 28px; }
+#Portfolio h2 { font-size: clamp(24px, 3.5vw, 28px); }
 
 #Portfolio .port-para {
     display: flex;
@@ -356,8 +491,8 @@ header {
     width: 100%;
     max-width: 620px;
     color: rgba(128, 128, 128, 0.854);
-    line-height: 25px;
-    font-size: 18px;
+    line-height: 1.6; /* FIX 8 */
+    font-size: clamp(16px, 2vw, 18px);
     font-weight: 400;
     margin: 20px 0;
 }
@@ -379,37 +514,49 @@ header {
 .featured-project ul li {
     color: rgba(128, 128, 128, 0.947);
     border: 2px solid rgba(128, 128, 128, 0.957);
-    padding: 10px 25px;
+    /* FIX 7: smaller pills on small screens so more fit per row. */
+    padding: 10px clamp(14px, 3vw, 25px);
+    font-size: clamp(13px, 1.8vw, 16px);
     border-radius: 20px;
     font-weight: 600;
 }
 
-.featured-project ul .ap, .featured-project ul li:hover {
+.featured-project ul .ap,
+.featured-project ul li:hover {
     color: #fff;
     background-color: #cea812;
     border-color: #cea812;
     cursor: pointer;
 }
 
+/* FIX 1 + FIX 9: two versions were fighting here.
+   - HEAD: flex-wrap (responsive)
+   - other: grid with repeat(3, 1fr) (ALWAYS 3 columns = squashed on phones)
+   Best of both: a grid whose column count adapts automatically.
+   repeat(auto-fit, minmax(min(100%, 280px), 1fr)) reads as:
+     "fit as many columns as possible, each at least 280px wide (or 100% of
+      the container if that is smaller), then share leftover space equally."
+   Result: 3 cols on desktop, 2 on tablet, 1 on phone, zero media queries. */
 #Portfolio .interiorimages {
-    /* display: flex; */
-    justify-content: center;
-    align-items: stretch;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
     gap: 20px;
-    flex-wrap: wrap;
     margin: 30px 0;
 }
 
 #Portfolio .sub-image-container {
-    flex: 1 1 300px;
-    max-width: 370px;
-    height: 400px;
+    /* FIX 9: flex/max-width from the old flex layout don't apply to grid
+       items and the 370px cap would leave gaps in each grid cell. */
+    width: 100%;
+    /* FIX 7: fixed 400px height -> scales, never below 300px. */
+    height: clamp(300px, 34vw, 400px);
     position: relative;
 }
 
-#Portfolio .img-container, .sub-image-container .image-hover {
+#Portfolio .img-container,
+.sub-image-container .image-hover {
     width: 100%;
-    height: 100%;   
+    height: 100%;
 }
 
 #Portfolio .img-container img {
@@ -424,23 +571,25 @@ header {
     opacity: 0;
     flex-direction: column;
     justify-content: center;
-    align-items: center; 
+    align-items: center;
     position: absolute;
     background-color: rgba(0, 0, 0, 0.6);
     border-radius: 15px;
     top: 0;
     left: 0;
+    padding: 15px;
     transition: opacity 0.3s ease-in-out;
 }
 
 .sub-image-container:hover .image-hover { opacity: 1; }
+
 .sub-image-container:hover {
     transform: translateY(-10px);
     transition: transform 0.3s ease-in-out;
 }
 
 .sub-image-container .image-hover h4 {
-    font-size: 20px;
+    font-size: clamp(17px, 2.2vw, 20px);
     color: #fff;
     text-transform: uppercase;
 }
@@ -456,14 +605,33 @@ header {
     font-weight: 600;
     padding-bottom: 5px;
     border-bottom: 3px solid #c9a24b;
-} 
+}
 
-.sub-image-container .image-hover a:hover { color: #cea812; } 
+.sub-image-container .image-hover a:hover { color: #cea812; }
 
+/* FIX 13 (revised): the caption stays HIDDEN until the user interacts.
+   - Desktop: appears on mouse hover (rule above).
+   - Phone/tablet: appears when the image is tapped. Mobile browsers treat
+     a tap as a "hover" on elements that look clickable, and cursor:pointer
+     is what tells iOS Safari to do that.
+   - :focus-within also shows it when the "View Project" link gets focus
+     (keyboard Tab), so it is reachable without a mouse. */
+.sub-image-container {
+    cursor: pointer;
+}
+
+.sub-image-container:focus-within .image-hover {
+    opacity: 1;
+}
+
+
+/* ---------------------------------------------------------------------
+   8. PROCESS
+   --------------------------------------------------------------------- */
 #process {
     background-color: rgba(0, 0, 0, 0.833);
     text-align: center;
-    padding: 100px 0;
+    padding: clamp(60px, 9vw, 100px) 0; /* FIX 7 */
 }
 
 #process .pro-para {
@@ -476,17 +644,20 @@ header {
     width: 100%;
     max-width: 520px;
     margin: 20px 0;
+    line-height: 1.7; /* FIX 8 */
 }
 
+/* FIX 10: 4 cards with flex-wrap gives an ugly "3 + 1 orphan" on tablets
+   (the lonely 4th card stretches full width). Grid lets us be explicit:
+   4 columns -> 2 columns (<=1024px) -> 1 column (<=480px), see the media
+   queries at the bottom. */
 .designjourney {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
     padding-top: 60px;
     gap: 30px;
     color: white;
 }
-
-.process-card { flex: 1 1 200px; }
 
 .process-card .number {
     font-size: 50px;
@@ -517,9 +688,13 @@ header {
 
 #process h3 + h2 { color: #fff; }
 
+
+/* ---------------------------------------------------------------------
+   9. TESTIMONIALS
+   --------------------------------------------------------------------- */
 #TESTIMONIALS {
     background: #f8f8f8;
-    padding: 80px 0;
+    padding: clamp(50px, 8vw, 80px) 0; /* FIX 7 */
     text-align: center;
 }
 
@@ -543,7 +718,7 @@ header {
     flex: 1 1 300px;
     max-width: 420px;
     background: #fff;
-    padding: 35px 30px;
+    padding: 35px clamp(20px, 3vw, 30px);
     border-radius: 10px;
     text-align: center;
     box-shadow: 0 2px 10px rgba(0, 0, 0, .1);
@@ -564,6 +739,7 @@ header {
     width: 60px;
     border-radius: 50%;
     object-fit: cover;
+    flex-shrink: 0; /* FIX 3: stops the avatar being squashed into an oval */
 }
 
 .client-image h4 {
@@ -576,9 +752,13 @@ header {
     font-size: 14px;
 }
 
+
+/* ---------------------------------------------------------------------
+   10. BLOG
+   --------------------------------------------------------------------- */
 #Blog {
     background-color: #f1edde;
-    padding: 100px 0;
+    padding: clamp(60px, 9vw, 100px) 0; /* FIX 7 */
     text-align: center;
 }
 
@@ -591,10 +771,13 @@ header {
 .blog-para p {
     width: 100%;
     max-width: 500px;
-    line-height: 25px;
+    line-height: 1.7; /* FIX 8 */
     margin: 20px 0px;
 }
 
+/* FIX 1: the other branch of the merge added `margin: 0 50px` and
+   `display:block` here. That would squeeze the cards on phones (100px of
+   the screen wasted) and remove the wrapping. Dropped on purpose. */
 .blog-card {
     display: flex;
     flex-wrap: wrap;
@@ -609,7 +792,7 @@ header {
     max-width: 460px;
     background-color: #fff;
     border-radius: 10px;
-    overflow: hidden; 
+    overflow: hidden;
     box-shadow: 0 2px 10px rgba(0, 0, 0, .08);
     transition: 0.3s ease;
 }
@@ -618,23 +801,24 @@ header {
 
 .trend-card img {
     width: 100%;
-    height: 250px;
+    height: clamp(200px, 22vw, 250px); /* FIX 7 */
     object-fit: cover;
     display: block;
 }
 
-.blog-content { padding: 30px; }
+.blog-content { padding: clamp(20px, 3vw, 30px); } /* FIX 7 */
 
 .blog-info {
     display: flex;
-    gap: 20px;
+    flex-wrap: wrap; /* FIX 3: date + category can wrap on narrow cards */
+    gap: 8px 20px;
     color: grey;
     margin-bottom: 15px;
     font-size: 14px;
 }
 
 .blog-content h2 {
-    font-size: 20px;
+    font-size: clamp(18px, 2.4vw, 20px);
     font-weight: 500;
     margin-bottom: 15px;
     line-height: 1.3;
@@ -653,8 +837,12 @@ header {
     font-weight: bold;
 }
 
+
+/* ---------------------------------------------------------------------
+   11. CONTACT
+   --------------------------------------------------------------------- */
 #Contact {
-    padding: 80px 0 70px;
+    padding: clamp(50px, 8vw, 80px) 0 clamp(50px, 7vw, 70px); /* FIX 7 */
     text-align: center;
     background-color: rgba(241, 240, 240, 0.881);
 }
@@ -668,7 +856,7 @@ header {
 .contact-para p {
     width: 100%;
     max-width: 555px;
-    line-height: 25px;
+    line-height: 1.7; /* FIX 8 */
     margin: 20px 0px;
 }
 
@@ -680,11 +868,16 @@ header {
     text-align: left;
 }
 
+/* FIX 1 + FIX 11: kept the HEAD version (flex: 1 1 400px, wraps under the
+   contact details on small screens). The other branch had `height: 430px`.
+   A fixed height is dangerous: when the form is narrower, inputs stack and
+   need MORE vertical room, so they overflow out of the white box. Let the
+   content decide the height. */
 .con-form {
     flex: 1 1 400px;
     max-width: 760px;
     background: #fff;
-    padding: 35px 30px;
+    padding: 35px clamp(20px, 3vw, 30px);
     border-radius: 10px;
 }
 
@@ -699,8 +892,10 @@ header {
     flex: 1 1 200px;
 }
 
-input, textarea {
+input,
+textarea {
     width: 100%;
+    max-width: 100%;
     padding: 15px;
     border-radius: 5px;
     border: 1px solid #ccc;
@@ -744,31 +939,37 @@ button:hover {
     line-height: 1.6;
 }
 
+/* FIX 1 + FIX 11: three different iframe widths/heights were in play
+   (100%/350px, 100%/150px and a fixed 500px which would overflow every
+   phone). One fluid rule: full width of the container, height that scales
+   between 250px and 350px. display:block removes the inline-element gap. */
 iframe {
+    display: block;
     width: 100%;
-    max-width: 1200px;
-    height: 350px;
-iframe{
-    width: 100%;
-    height:150px;
+    max-width: 100%;
+    height: clamp(250px, 40vw, 350px);
     margin: 50px 0 20px;
+    border: 0;
     border-radius: 10px;
 }
 
-/* footer */
+
+/* ---------------------------------------------------------------------
+   12. FOOTER
+   --------------------------------------------------------------------- */
 footer {
     background-color: rgb(9, 8, 8);
     color: #e8e6e1;
     padding: 60px 0 0;
 }
- 
+
 .footer-container {
     display: flex;
     flex-wrap: wrap;
     gap: 40px;
     justify-content: space-between;
-} 
-  
+}
+
 .footer-logo {
     flex: 1 1 250px;
 }
@@ -799,7 +1000,9 @@ footer {
 
 .flss {
     display: flex;
-    flex: 2 1 600px;
+    /* FIX 12: `flex-basis: 600px` was wider than a phone screen. min()
+       picks whichever is smaller: 600px or 100% of the space available. */
+    flex: 2 1 min(100%, 600px);
     flex-wrap: wrap;
     justify-content: space-between;
     gap: 30px;
@@ -819,7 +1022,7 @@ footer {
 .footer-links h3::after {
     content: "";
     position: absolute;
-    width: 40px;        
+    width: 40px;
     height: 2px;
     background: #cea812;
     bottom: -5px;
@@ -828,6 +1031,7 @@ footer {
 
 .footer-links ul { list-style: none; }
 .footer-links li { margin-bottom: 12px; }
+
 .footer-links a {
     color: #a9a7a1;
     text-decoration: none;
@@ -857,8 +1061,9 @@ footer {
 
 .fs {
     display: flex;
+    flex-wrap: wrap; /* FIX 12: icons wrap instead of overflowing */
     gap: 12px;
-} 
+}
 
 .footer-social a {
     width: 34px;
@@ -907,50 +1112,47 @@ hr {
     flex-wrap: wrap;
 }
 
+/* FIX 1: this rule was cut in half by the merge conflict (the closing
+   brace and the :hover rule were tangled up with media-query code). */
 .bottom-links a {
     color: #cfcdc7;
     text-decoration: none;
     font-size: 12.5px;
 }
 
-.bottom-links a:hover { color: #cba660; }  
+.bottom-links a:hover { color: #cba660; }
 
-/* MEDIA QUERIES */
 
-@media screen and (max-width: 900px) {
-    .menu-overlay.active {
-        display: block;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100vh;
-        background: rgba(0, 0, 0, 0.45);
-        z-index: 999;
-    }
+/* ---------------------------------------------------------------------
+   13. ACCESSIBILITY
+   --------------------------------------------------------------------- */
+/* FIX 16: visible focus ring for keyboard users (Tab key). */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+    outline: 2px solid #cea812;
+    outline-offset: 3px;
+}
 
-    .flex-container nav ul {
-        position: fixed;
-        top: 0;
-        right: 0;
-        width: 270px;
-        height: 100vh;
-        background-color: #243238;
-        padding: 20px;
-        display: flex;
-        flex-direction: column;
-        transform: translateX(100%);
-        transition: transform 0.4s ease;
-    }
-    
-    .close-menu {
-        display: flex;
-        color: white;
-        justify-content: space-between;
-        font-size: 30px;
-        cursor: pointer;
-        padding: 0 0 10px;
-    }
+
+/* =====================================================================
+   14. MEDIA QUERIES
+   Desktop-first (max-width), using ONE consistent set of breakpoints:
+        1024px  tablet landscape / small laptop
+         768px  tablet portrait
+         480px  phones
+   The old file mixed 900px and 648px (and 648px appeared twice, half of
+   it inside the merge conflict). Fewer, consistent breakpoints = easier
+   to maintain.
+   ===================================================================== */
+
+/* ---------- <= 1024px : hamburger menu + 2-column process ---------- */
+/* FIX 5: The old breakpoint was 900px. But 9 nav links + logo need about
+   900px+ of width, so between 900px-1000px the menu wrapped or overflowed
+   (typical iPad landscape = 1024px). Switching to the hamburger at 1024px
+   removes that broken range. */
+@media screen and (max-width: 1024px) {
 
     .hamburger {
         display: block !important;
@@ -960,61 +1162,191 @@ hr {
 
     .hamburger.hide { display: none !important; }
 
+    .menu-overlay.active {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        height: 100dvh; /* FIX 6 */
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 999;
+    }
+
+    .flex-container nav ul {
+        position: fixed;
+        top: 0;
+        right: 0;
+        /* FIX 6: on a 320px phone a 270px menu covers almost everything;
+           min() caps it at 80% of the screen. */
+        width: min(270px, 80vw);
+        height: 100vh;
+        height: 100dvh; /* FIX 6 */
+        /* FIX 6: 9 links don't fit on a phone held sideways (~320px tall).
+           Without this the bottom links were unreachable. */
+        overflow-y: auto;
+        background-color: #243238;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        transform: translateX(100%);
+        /* FIX 6: a closed menu is only moved off-screen, so keyboard users
+           could still Tab into invisible links. visibility:hidden removes
+           them from tab order until the menu opens. */
+        visibility: hidden;
+        transition: transform 0.4s ease, visibility 0.4s ease;
+    }
+
+    .close-menu {
+        display: flex;
+        color: white;
+        justify-content: space-between;
+        font-size: 30px;
+        cursor: pointer;
+        padding: 0 0 10px;
+    }
+
     .flex-container nav ul.active {
         transform: translateX(0);
+        visibility: visible;
         z-index: 1000;
         background-color: rgb(33, 33, 33);
     }
 
     .flex-container nav ul.active li {
-        margin: 0; 
+        margin: 0;
         padding: 15px 0;
     }
 
-    .flex-container ul li a::after { display: none; }
-    .flex-container ul li a::before {
-        bottom: -5px;
+    /* FIX 6 (real bug): after scrolling, .scrolled turns every nav link
+       BLACK (for the white desktop bar). Inside the dark slide-out menu
+       that means black text on a dark background = unreadable. Same
+       selector as the desktop rule, placed later, so it wins. */
+    .flex-container.scrolled nav ul li a {
+        color: #fff;
     }
 
-    .aboutusrightpara { margin: 10px 0 20px; }
+    .flex-container ul li a::after { display: none; }
+    .flex-container ul li a::before { bottom: -5px; }
+
+    /* FIX 10: 4 -> 2 columns */
+    .designjourney {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
-@media screen and (max-width: 648px) {
-    .header-text h1 { font-size: 32px; }
-    .header-text .gold { font-size: 38px; }
-    
-    .header-btn a:nth-child(1),
-    .header-btn a:nth-child(2) {
-        width: 100%;
-        text-align: center;
-        margin: 0;
-    }
-    
-    .flss {
-        flex-direction: column;
-        gap: 20px;
+/* ---------- <= 768px : tablet portrait ---------- */
+@media screen and (max-width: 768px) {
+
+    .aboutusrightpara {
+        margin: 10px 0 20px;
+        letter-spacing: 1px; /* 2px tracking is too airy on narrow columns */
     }
 
-    .footer-links h3::after {
-        left: 50%;
-        transform: translateX(-50%);
+    .achievement { justify-content: center; }
+
+    /* FIX 12: footer. Logo block on top, then the three link lists + social
+       in a tidy 2-column grid, centred. (The old 648px block only stacked
+       everything into one very long column.) */
+    .footer-container {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 30px;
     }
-    
+
+    .flss {
+        flex: none;
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 30px 20px;
+        text-align: center;
+    }
+
+    .footer-links,
+    .footer-social {
+        text-align: center;
+    }
+
+    .footer-links h3::after,
     .footer-social h4::after {
         left: 50%;
         transform: translateX(-50%);
     }
 
-    .footer-links, .footer-social, .footer-logo, .footer-bottom {
-        text-align: center;
-        align-items: center;
+    .fs,
+    .bottom-links {
         justify-content: center;
     }
 
-    .fs { justify-content: center; }
-    .bottom-links { justify-content: center; }
+    .footer-bottom {
+        flex-direction: column;
+        text-align: center;
+        justify-content: center;
+    }
 }
 
+/* ---------- <= 480px : phones ---------- */
+@media screen and (max-width: 480px) {
+
+    /* Hero buttons: stack and go full width (bigger tap targets). */
+    .header-btn {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .header-btn a:nth-child(1),
+    .header-btn a:nth-child(2) {
+        width: 100%;
+        text-align: center;
+        margin: 0;
+        font-size: 15px;
+        padding: 12px 20px;
+    }
+
+    .aboutusrightpara { letter-spacing: 0.5px; }
+
+    /* FIX 10: 2 -> 1 column */
+    .designjourney {
+        grid-template-columns: 1fr;
+        padding-top: 40px;
+    }
+
+    /* Full-width submit button is easier to tap. */
+    .con-form button {
+        width: 100%;
+    }
+
+    /* FIX 12: footer lists in a single column on very small phones. */
+    .flss {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* ---------------------------------------------------------------------
+   15. MOTION PREFERENCES
+   --------------------------------------------------------------------- */
+/* FIX 16: some users (vestibular disorders, low-power devices) enable
+   "reduce motion" in their OS. This respects that setting. */
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-delay: 0s !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+
+/* ---------------------------------------------------------------------
+   16. KEYFRAMES
+   --------------------------------------------------------------------- */
 @keyframes sectionReveal {
     from {
         opacity: 0;
